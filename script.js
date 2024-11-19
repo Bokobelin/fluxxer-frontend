@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const postContent = document.getElementById('post-content');
 
   async function fetchPosts() {
-    const response = await fetch('https://fluxxer-backend.vercel.app/api/posts.js', {
+    const response = await fetch('${API_URL}/api/posts.js', {
       method: 'GET', // GET method for fetching data
       headers: {
       },
@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (postContent.value.trim() !== '') {
-      await fetch(`${API_URL}/posts`, {
+      await fetch(`${API_URL}/api/posts.js`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
