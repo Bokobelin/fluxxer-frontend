@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (postContent.value.trim() !== '') {
-      await fetch(`https://fluxxer-backend.vercel.app/api/posts.js`, {
+      await fetch('https://fluxxer-backend.vercel.app/api/posts.js', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
