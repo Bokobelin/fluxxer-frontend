@@ -100,7 +100,4 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (loadMoreButton) {
     loadMoreButton.addEventListener('click', () => renderFeed());
   }
-
-  // Initial render
-  renderFeed();
 });
