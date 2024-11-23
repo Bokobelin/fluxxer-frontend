@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000';
+const API_URL = 'https://fluxxer-backend.vercel.app';
 
 document.addEventListener('DOMContentLoaded', async () => {
   const feed = document.getElementById('feed');
