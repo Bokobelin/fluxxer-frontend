@@ -37,7 +37,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
       if (response.ok) {
         posts = await response.json(); // Store all posts in memory
-        posts.reverse(); // Ensure newest posts are shown first
       } else {
         console.error('Error fetching posts:', response.statusText);
       }
