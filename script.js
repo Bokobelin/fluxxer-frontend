@@ -1,103 +1,85 @@
-const API_URL = 'https://fluxxer-backend.vercel.app';
+const API_URL = 'https://fluxxer-backend.vercel.app'; // Your API URL
 
 document.addEventListener('DOMContentLoaded', async () => {
   const feed = document.getElementById('feed');
   const form = document.getElementById('new-post-form');
   const postContent = document.getElementById('post-content');
   const loadMoreButton = document.getElementById('load-more');
-  let currentIndex = 0; // Track the current post index
+  let posts = []; // Array to hold all posts
+  let visiblePostsCount = 0; // Track the number of posts currently visible
+  const postsPerLoad = 5; // Number of posts to load at a time
 
-  // Function to fetch a single post by index
-  async function fetchPostByIndex(index) {
+  // Fetch all posts from the server
+  async function fetchAllPosts() {
     try {
-      const response = await fetch(`${API_URL}/api/posts.js?index=${index}`, {
+      const response = await fetch(`${API_URL}/api/posts.js`, {
         method: 'GET',
       });
-
       if (response.ok) {
-        return await response.json(); // Return the single post as JSON
-      } else if (response.status === 404) {
-        console.warn('No more posts available.');
-        return null; // Return null if no more posts
+        posts = await response.json(); // Store all posts in memory
+        posts.reverse(); // Ensure newest posts are shown first
       } else {
-        console.error('Error fetching post:', response.statusText);
-        return null; // Return null in case of an error
+        console.error('Error fetching posts:', response.statusText);
       }
     } catch (error) {
-      console.error('Error fetching post:', error);
-      return null; // Handle network errors
+      console.error('Error fetching posts:', error);
     }
   }
 
-  // Function to fetch the first post (for refreshing after a new post is added)
-  async function fetchFirstPost() {
-    try {
-      const response = await fetch(`${API_URL}/api/posts.js?index=0`, {
-        method: 'GET',
-      });
-
-      if (response.ok) {
-        return await response.json(); // Return the single post as JSON
-      } else {
-        console.warn('No posts available.');
-        return null; // Return null if no posts exist
-      }
-    } catch (error) {
-      console.error('Error fetching first post:', error);
-      return null; // Handle network errors
-    }
-  }
-
-  // Function to render the feed
-  async function renderFeed(posted = false) {
-    let post = null;
-    if (posted) {
-      post = await fetchFirstPost(); // Fetch the first post after a new post is submitted
-    } else {
-      post = await fetchPostByIndex(currentIndex); // Fetch the next post by index
-    }
-
-    if (post != null) {
+  // Render a batch of posts to the feed
+  function renderPosts() {
+    const postsToShow = posts.slice(visiblePostsCount, visiblePostsCount + postsPerLoad);
+    postsToShow.forEach((post) => {
       const postEl = document.createElement('div');
       postEl.classList.add('post');
       postEl.innerHTML = `
         <p>${post.content}</p>
         <div class="post-time">${new Date(post.time).toLocaleString()}</div>
       `;
-      feed.appendChild(postEl); // Append the new post to the feed
+      feed.appendChild(postEl);
+    });
+    visiblePostsCount += postsToShow.length;
 
-      if (!posted) {
-        currentIndex++; // Increment the index for the next post if it's not a new post
-      }
-    } else {
-      // If there are no posts to show and this is the first load
-      const noMorePosts = feed.appendChild(document.createElement('p'));
-      noMorePosts.style.textAlign = 'center';
-      noMorePosts.textContent = 'No more posts available.';
+    // Hide the "Load More" button if all posts are displayed
+    if (visiblePostsCount >= posts.length) {
       loadMoreButton.style.display = 'none';
     }
   }
 
-  // Handle form submission
+  // Handle form submission to create a new post
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (postContent.value.trim() !== '') {
-      await fetch(`${API_URL}/api/posts.js`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ content: postContent.value.trim() }),
-      });
-      postContent.value = '';
-      feed.innerHTML = ''; // Clear feed to re-render with new posts
-      currentIndex = 0; // Reset the index to start from the first post
-      //renderFeed(true); // Fetch the latest post after submission
+      try {
+        const response = await fetch(`${API_URL}/api/posts.js`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ content: postContent.value.trim() }),
+        });
+
+        if (response.ok) {
+          postContent.value = ''; // Clear the input
+          feed.innerHTML = ''; // Clear the feed to re-render
+          visiblePostsCount = 0; // Reset visible posts count
+          await fetchAllPosts(); // Fetch the updated posts
+          renderPosts(); // Render the updated feed
+        } else {
+          console.error('Error submitting post:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error submitting post:', error);
+      }
     }
   });
 
-  // Load more posts manually with the button
-  if (loadMoreButton) {
-    loadMoreButton.addEventListener('click', () => renderFeed());
-  }
+  // Load more posts when the button is clicked
+  loadMoreButton.addEventListener('click', () => {
+    renderPosts();
+  });
+
+  // Initialize the feed
+  await fetchAllPosts(); // Fetch all posts from the backend
+  renderPosts(); // Render the initial batch of posts
 });
