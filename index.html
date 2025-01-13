@@ -10,9 +10,10 @@
   <div id="app">
     <h1>Fluxxer</h1>
     <h3>No algorithm. No account creation required.</h3>
+    <button id="toggle-sidebar" class="toggle-sidebar">☰</button> <!-- Add this line -->
     <div class="container">
-      <aside class="sidebar">
-        <nav>
+        <aside class="sidebar">
+            <nav>
           <a href="#" data-category="" class="nav-link">All</a>
           <a href="#" data-category="gaming" class="nav-link">Gaming</a>
           <a href="#" data-category="tech" class="nav-link">Tech</a>
@@ -47,6 +48,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const postCategory = document.getElementById('post-category');
     const loadMoreButton = document.getElementById('load-more');
     const navLinks = document.querySelectorAll('nav a');
+    const toggleSidebarButton = document.getElementById('toggle-sidebar'); // Add this line
+    const sidebar = document.querySelector('.sidebar'); // Add this line
     let posts = [];
     let visiblePostsCount = 0;
     const postsPerLoad = 5;
@@ -60,7 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         if (response.ok) {
           posts = await response.json();
-          posts.reverse();
+          //posts.reverse() //posts are reversed on the backend
         } else {
           console.error('Error fetching posts:', response.statusText);
         }
@@ -98,7 +101,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       e.preventDefault();
       if (postContent.value.trim() !== '') {
         try {
-          const response = await fetch(`${API_URL}/api/posts.mjs`, {
+          const response = await fetch(`${API_URL}/api/posts.js`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -140,7 +143,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         feed.innerHTML = '';
         visiblePostsCount = 0;
         renderPosts();
+        sidebar.classList.toggle('show');
       });
+    });
+
+    // Toggle sidebar visibility
+    toggleSidebarButton.addEventListener('click', () => {
+        sidebar.classList.toggle('show');
     });
 
     // Initialize the feed

@@ -34,6 +34,7 @@ body {
     background: #f8f9fa;
     padding: 20px;
     border-right: 1px solid #ddd;
+    transition: left 0.3s ease; /* Add transition for animation */
   }
 
   .content {
@@ -121,19 +122,66 @@ body {
     background: #0056b3;
   }
 
+  /* Toggle button styles */
+  .toggle-sidebar {
+    position: absolute; /* Change to absolute positioning */
+    top: 15vh;
+    margin-left: 1.5vw;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px;
+    cursor: pointer;
+    z-index: 1000;
+  }
+
+  .toggle-sidebar:hover {
+    background: #0056b3;
+  }
+
   /* Responsive styles */
   @media (max-width: 768px) {
     .container {
       flex-direction: column;
     }
 
-    .sidebar {
-      width: 100%;
+    .toggle-sidebar {
+        top: 10px;
+    }
+
+    .sidebar.show {
+      width: 100vw;
+      right: 0;
       border-right: none;
       border-bottom: 1px solid #ddd;
+      position: fixed;
+      top: 0;
+      height: 100%;
+      background: #f8f9fa;
+      z-index: 999;
+      transition: left 0.3s ease;
     }
 
     .content {
       padding: 10px;
     }
+
+    .toggle-sidebar {
+      display: block;
+    }
+  }
+
+  .sidebar {
+    transition: left 0.3s ease, transform 0.3s ease; /* Add transition for animation */
+  }
+
+  .sidebar {
+    display: none;
+    transition: left 0.3s ease; /* Add transition for animation */
+  }
+
+  .sidebar.show {
+    display: block;
+    transition: left 0.3s ease; /* Add transition for animation */
   }
