@@ -10,98 +10,144 @@
   <div id="app">
     <h1>Fluxxer</h1>
     <h3>No algorithm. No account creation required.</h3>
-    <form id="new-post-form">
-      <textarea id="post-content" placeholder="What's on your mind?" required></textarea>
-      <button type="submit">Post</button>
-    </form>
-    <div id="feed"></div>
-    <button id="load-more">Load More</button>
+    <div class="container">
+      <aside class="sidebar">
+        <nav>
+          <a href="#" data-category="" class="nav-link">All</a>
+          <a href="#" data-category="gaming" class="nav-link">Gaming</a>
+          <a href="#" data-category="tech" class="nav-link">Tech</a>
+          <a href="#" data-category="lifestyle" class="nav-link">Lifestyle</a>
+          <!-- Add more categories as needed -->
+        </nav>
+      </aside>
+      <main class="content">
+        <form id="new-post-form">
+          <textarea id="post-content" placeholder="What's on your mind?" required></textarea>
+          <select id="post-category">
+            <option value="">Select Category</option>
+            <option value="gaming">Gaming</option>
+            <option value="tech">Tech</option>
+            <option value="lifestyle">Lifestyle</option>
+            <!-- Add more categories as needed -->
+          </select>
+          <button type="submit">Post</button>
+        </form>
+        <div id="feed"></div>
+        <button id="load-more">Load More</button>
+      </main>
+    </div>
   </div>
   <script>
     const API_URL = 'https://fluxxer-backend.vercel.app'; // Your API URL
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const feed = document.getElementById('feed');
-  const form = document.getElementById('new-post-form');
-  const postContent = document.getElementById('post-content');
-  const loadMoreButton = document.getElementById('load-more');
-  let posts = []; // Array to hold all posts
-  let visiblePostsCount = 0; // Track the number of posts currently visible
-  const postsPerLoad = 5; // Number of posts to load at a time
+    const feed = document.getElementById('feed');
+    const form = document.getElementById('new-post-form');
+    const postContent = document.getElementById('post-content');
+    const postCategory = document.getElementById('post-category');
+    const loadMoreButton = document.getElementById('load-more');
+    const navLinks = document.querySelectorAll('nav a');
+    let posts = [];
+    let visiblePostsCount = 0;
+    const postsPerLoad = 5;
+    let currentCategory = '';
 
-  // Fetch all posts from the server
-  async function fetchAllPosts() {
-    try {
-      const response = await fetch(`${API_URL}/api/posts.js`, {
-        method: 'GET',
-      });
-      if (response.ok) {
-        posts = await response.json(); // Store all posts in memory
-      } else {
-        console.error('Error fetching posts:', response.statusText);
-      }
-    } catch (error) {
-      console.error('Error fetching posts:', error);
-    }
-  }
-
-  // Render a batch of posts to the feed
-  function renderPosts() {
-    const postsToShow = posts.slice(visiblePostsCount, visiblePostsCount + postsPerLoad);
-    postsToShow.forEach((post) => {
-      const postEl = document.createElement('div');
-      postEl.classList.add('post');
-      postEl.innerHTML = `
-        <p>${post.content}</p>
-        <div class="post-time">${new Date(post.time).toLocaleString()}</div>
-      `;
-      feed.appendChild(postEl);
-    });
-    visiblePostsCount += postsToShow.length;
-
-    // Hide the "Load More" button if all posts are displayed
-    if (visiblePostsCount >= posts.length) {
-      loadMoreButton.style.display = 'none';
-    }
-  }
-
-  // Handle form submission to create a new post
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (postContent.value.trim() !== '') {
+    // Fetch all posts from the server
+    async function fetchAllPosts() {
       try {
         const response = await fetch(`${API_URL}/api/posts.js`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ content: postContent.value.trim() }),
+          method: 'GET',
         });
-
         if (response.ok) {
-          postContent.value = ''; // Clear the input
-          feed.innerHTML = ''; // Clear the feed to re-render
-          visiblePostsCount = 0; // Reset visible posts count
-          await fetchAllPosts(); // Fetch the updated posts
-          renderPosts(); // Render the updated feed
+          posts = await response.json();
+          posts.reverse();
         } else {
-          console.error('Error submitting post:', response.statusText);
+          console.error('Error fetching posts:', response.statusText);
         }
       } catch (error) {
-        console.error('Error submitting post:', error);
+        console.error('Error fetching posts:', error);
       }
     }
-  });
 
-  // Load more posts when the button is clicked
-  loadMoreButton.addEventListener('click', () => {
+    // Render a batch of posts to the feed
+    function renderPosts() {
+      const filteredPosts = posts.filter(post => currentCategory === '' || post.category === currentCategory);
+      const postsToShow = filteredPosts.slice(visiblePostsCount, visiblePostsCount + postsPerLoad);
+      postsToShow.forEach((post) => {
+        const postEl = document.createElement('div');
+        postEl.classList.add('post');
+        postEl.innerHTML = `
+          <p>${post.content}</p>
+          <div class="post-category">${post.category || ''}</div>
+          <div class="post-time">${new Date(post.time).toLocaleString()}</div>
+        `;
+        feed.appendChild(postEl);
+      });
+      visiblePostsCount += postsToShow.length;
+
+      // Hide the "Load More" button if all posts are displayed
+      if (visiblePostsCount >= filteredPosts.length) {
+        loadMoreButton.style.display = 'none';
+      } else {
+        loadMoreButton.style.display = 'block';
+      }
+    }
+
+    // Handle form submission to create a new post
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (postContent.value.trim() !== '') {
+        try {
+          const response = await fetch(`${API_URL}/api/posts.mjs`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              content: postContent.value.trim(),
+              category: postCategory.value,
+            }),
+          });
+
+          if (response.ok) {
+            postContent.value = '';
+            postCategory.value = '';
+            feed.innerHTML = '';
+            visiblePostsCount = 0;
+            await fetchAllPosts();
+            renderPosts();
+          } else {
+            console.error('Error submitting post:', response.statusText);
+          }
+        } catch (error) {
+          console.error('Error submitting post:', error);
+        }
+      }
+    });
+
+    // Load more posts when the button is clicked
+    loadMoreButton.addEventListener('click', () => {
+      renderPosts();
+    });
+
+    // Handle category navigation
+    navLinks.forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        currentCategory = e.target.getAttribute('data-category');
+        navLinks.forEach(link => link.classList.remove('active'));
+        e.target.classList.add('active');
+        feed.innerHTML = '';
+        visiblePostsCount = 0;
+        renderPosts();
+      });
+    });
+
+    // Initialize the feed
+    await fetchAllPosts();
     renderPosts();
   });
 
-  // Initialize the feed
-  await fetchAllPosts(); // Fetch all posts from the backend
-  renderPosts(); // Render the initial batch of posts
-});
   </script>
 </body>
 </html>
